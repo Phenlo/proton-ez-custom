@@ -48,10 +48,10 @@ RUN wget -q @RUST_URLBASE@/@RUST_SOURCE_i686@ \
 
 RUN bash -c 'ls /opt/rust/bin/* | xargs -n1 -I{} ln -sf {} /usr/bin/'
 
-RUN bash -c 'mkdir -p /usr/lib/ccache && ls /usr/bin/{,*-}{cc,c++,gcc,g++}{,-[0-9]*} | sed -re s:/bin:/lib/ccache: | xargs -n1 ln -sf ../../bin/ccache'
+RUN bash -c 'mkdir -p /usr/lib/ccache && ls /usr/bin/{,*-}{cc,c++,gcc,g++}{,-[0-9]*} 2>/dev/null | sed -re s:/bin:/lib/ccache: | xargs -n1 ln -sf ../../bin/ccache'
 ENV PATH=/usr/lib/ccache:$PATH
 
-RUN apt-get install -y \
+RUN apt-get update -y && apt-get install -y \
   autoconf-archive \
   fontforge \
   fonttools \
