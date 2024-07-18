@@ -95,7 +95,7 @@ define create-build-base-rules
 .PHONY: build-base-$(1)
 all build-base: build-base-$(1)
 build-base-$(1): build-base-$(1).Dockerfile
-	$(DOCKER) build -f $$< \
+	$(DOCKER) build --squash -f $$< \
 	  --cache-from=$(PROTONSDK_URLBASE)/build-base-$(1) \
 	  -t $(PROTONSDK_URLBASE)/build-base-$(1):latest \
 	  context
@@ -139,7 +139,7 @@ define create-mingw-rules
 all mingw: mingw-$(2)-$(1)
 mingw-$(2)-$(1): ARCH_FLAGS = $(MINGW_ARCH_FLAGS_$(2)-$(1))
 mingw-$(2)-$(1): mingw-$(2)-$(1).Dockerfile | binutils
-	$(DOCKER) build -f $$< \
+	$(DOCKER) build --squash -f $$< \
 	  --cache-from=$(PROTONSDK_URLBASE)/mingw-$(2)-$(1) \
 	  -t $(PROTONSDK_URLBASE)/mingw-$(2)-$(1):$(MINGW_VERSION) \
 	  -t $(PROTONSDK_URLBASE)/mingw-$(2)-$(1):latest \
@@ -174,7 +174,7 @@ all gcc: gcc-$(1)-$(2)
 gcc-$(1)-$(2): ARCH_FLAGS = $(GCC_ARCH_FLAGS_$(1))
 gcc-$(1)-$(2): TARGET_FLAGS = $(GCC_TARGET_FLAGS_$(2))
 gcc-$(1)-$(2): gcc-$(1)-$(2).Dockerfile | mingw
-	$(DOCKER) build -f $$< \
+	$(DOCKER) build --squash -f $$< \
 	  --cache-from=$(PROTONSDK_URLBASE)/gcc-$(1)-$(2) \
 	  -t $(PROTONSDK_URLBASE)/gcc-$(1)-$(2):$(GCC_VERSION) \
 	  -t $(PROTONSDK_URLBASE)/gcc-$(1)-$(2):latest \
@@ -196,7 +196,7 @@ define create-proton-rules
 all: proton
 proton: BASE_IMAGE = $(STEAMRT_URLBASE)/steamrt/sniper/sdk:$(STEAMRT_VERSION)
 proton: proton.Dockerfile | gcc
-	$(DOCKER) build -f $$< \
+	$(DOCKER) build --squash -f $$< \
 	  --cache-from=$(PROTONSDK_URLBASE) \
 	  -t $(PROTONSDK_URLBASE):$(PROTONSDK_VERSION) \
 	  -t $(PROTONSDK_URLBASE):latest \
