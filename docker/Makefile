@@ -1,8 +1,11 @@
 STEAMRT_VERSION = 0.20240307.80401
 STEAMRT_URLBASE = registry.gitlab.steamos.cloud
 
-PROTONSDK_URLBASE = $(STEAMRT_URLBASE)/proton/sniper/sdk
-PROTONSDK_VERSION = $(STEAMRT_VERSION)-0-dev
+CUSTOMSDK_VERSION = 0.20240718.1
+CUSTOMSDK_URLBASE = ghcr.io/phenlo
+
+PROTONSDK_URLBASE = $(CUSTOMSDK_URLBASE)/proton-ez-sdk
+PROTONSDK_VERSION = $(CUSTOMSDK_VERSION)-0-dev
 
 # this is just for building toolchain, as we do static builds it should
 # not have any impact on the end result, but changing it will invalidate
