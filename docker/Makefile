@@ -94,13 +94,19 @@ DOCKER = docker
 	    -re 's!@TARGET_FLAGS@!$(TARGET_FLAGS)!g' \
 	    $< >$@
 
+PUSH_CACHE ?= no
+docker-cache-args = \
+	--cache-from=$(1) \
+	$(if $(filter yes,$(PUSH_CACHE)),--layers --cache-to=$(1),--squash)
+
 define create-build-base-rules
 .PHONY: build-base-$(1)
 all build-base: build-base-$(1)
 build-base-$(1): build-base-$(1).Dockerfile
-	$(DOCKER) build --squash -f $$< \
-	  --cache-from=$(PROTONSDK_URLBASE)/build-base-$(1) \
+	$(DOCKER) build -f $$< \
+	  $(call docker-cache-args,$(PROTONSDK_URLBASE)/build-base-$(1)) \
 	  -t $(PROTONSDK_URLBASE)/build-base-$(1):$(BUILDBASE_VERSION) \
+	  -t $(PROTONSDK_URLBASE)/build-base-$(1):latest \
 	  context
 pull::
 	-$(DOCKER) pull $(PROTONSDK_URLBASE)/build-base-$(1):$(BUILDBASE_VERSION)
@@ -117,7 +123,7 @@ define create-binutils-rules
 all binutils: binutils-$(1)-$(2)
 binutils-$(1)-$(2): binutils-$(1)-$(2).Dockerfile | build-base
 	$(DOCKER) build -f $$< \
-	  --cache-from=$(PROTONSDK_URLBASE)/binutils-$(1)-$(2) \
+	  $(call docker-cache-args,$(PROTONSDK_URLBASE)/binutils-$(1)-$(2)) \
 	  -t $(PROTONSDK_URLBASE)/binutils-$(1)-$(2):$(BINUTILS_VERSION)_bb-$(BUILDBASE_VERSION) \
 	  -t $(PROTONSDK_URLBASE)/binutils-$(1)-$(2):latest \
 	  context
@@ -143,8 +149,8 @@ define create-mingw-rules
 all mingw: mingw-$(2)-$(1)
 mingw-$(2)-$(1): ARCH_FLAGS = $(MINGW_ARCH_FLAGS_$(2)-$(1))
 mingw-$(2)-$(1): mingw-$(2)-$(1).Dockerfile | binutils
-	$(DOCKER) build --squash -f $$< \
-	  --cache-from=$(PROTONSDK_URLBASE)/mingw-$(2)-$(1) \
+	$(DOCKER) build -f $$< \
+	  $(call docker-cache-args,$(PROTONSDK_URLBASE)/mingw-$(2)-$(1)) \
 	  -t $(PROTONSDK_URLBASE)/mingw-$(2)-$(1):$(MINGW_VERSION)_bb-$(BUILDBASE_VERSION) \
 	  -t $(PROTONSDK_URLBASE)/mingw-$(2)-$(1):latest \
 	  context
@@ -178,8 +184,8 @@ all gcc: gcc-$(1)-$(2)
 gcc-$(1)-$(2): ARCH_FLAGS = $(GCC_ARCH_FLAGS_$(1))
 gcc-$(1)-$(2): TARGET_FLAGS = $(GCC_TARGET_FLAGS_$(2))
 gcc-$(1)-$(2): gcc-$(1)-$(2).Dockerfile | mingw
-	$(DOCKER) build --squash -f $$< \
-	  --cache-from=$(PROTONSDK_URLBASE)/gcc-$(1)-$(2) \
+	$(DOCKER) build -f $$< \
+	  $(call docker-cache-args,$(PROTONSDK_URLBASE)/gcc-$(1)-$(2)) \
 	  -t $(PROTONSDK_URLBASE)/gcc-$(1)-$(2):$(GCC_VERSION)_bb-$(BUILDBASE_VERSION) \
 	  -t $(PROTONSDK_URLBASE)/gcc-$(1)-$(2):latest \
 	  context
@@ -200,8 +206,8 @@ define create-proton-rules
 all: proton
 proton: BASE_IMAGE = $(STEAMRT_URLBASE)/steamrt/sniper/sdk:$(STEAMRT_VERSION)
 proton: proton.Dockerfile | gcc
-	$(DOCKER) build --squash -f $$< \
-	  --cache-from=$(PROTONSDK_URLBASE) \
+	$(DOCKER) build -f $$< \
+	  $(call docker-cache-args,$(PROTONSDK_URLBASE)) \
 	  -t $(PROTONSDK_URLBASE):$(PROTONSDK_VERSION) \
 	  -t $(PROTONSDK_URLBASE):latest \
 	  context
