@@ -1,4 +1,4 @@
-FROM @PROTONSDK_URLBASE@/build-base-@ARCH@:latest AS build
+FROM @PROTONSDK_URLBASE@/build-base-@ARCH@:@BUILDBASE_VERSION@ AS build
 RUN wget -q @BINUTILS_URLBASE@/@BINUTILS_SOURCE@ \
 && echo '@BINUTILS_SHA256@ @BINUTILS_SOURCE@' | sha256sum -c - \
 && tar xf @BINUTILS_SOURCE@ -C /tmp && rm @BINUTILS_SOURCE@ \

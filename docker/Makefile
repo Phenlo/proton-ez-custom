@@ -1,7 +1,9 @@
 STEAMRT_VERSION = 0.20240307.80401
 STEAMRT_URLBASE = registry.gitlab.steamos.cloud
 
-CUSTOMSDK_VERSION = 0.20240718.1
+BUILDBASE_VERSION = 9-240719.1
+
+CUSTOMSDK_VERSION = 9-240719.1
 CUSTOMSDK_URLBASE = ghcr.io/phenlo
 
 PROTONSDK_URLBASE = $(CUSTOMSDK_URLBASE)/proton-ez-sdk
@@ -10,7 +12,7 @@ PROTONSDK_VERSION = $(CUSTOMSDK_VERSION)-0-dev
 # this is just for building toolchain, as we do static builds it should
 # not have any impact on the end result, but changing it will invalidate
 # docker caches, so we need something that don't change much
-BASE_IMAGE = $(STEAMRT_URLBASE)/steamrt/sniper/sdk:0.20221017.1
+BASE_IMAGE = $(STEAMRT_URLBASE)/steamrt/sniper/sdk:0.20240307.80401
 
 BINUTILS_VERSION = 2.42
 GCC_VERSION = 10.3.0
@@ -44,6 +46,7 @@ DOCKER = docker
 %.Dockerfile: %.Dockerfile.in Makefile
 	sed -re 's!@PROTONSDK_URLBASE@!$(PROTONSDK_URLBASE)!g' \
 	    -re 's!@BASE_IMAGE@!$(BASE_IMAGE)!g' \
+	    -re 's!@BUILDBASE_VERSION@!$(BUILDBASE_VERSION)!g' \
 	    -re 's!@BINUTILS_VERSION@!$(BINUTILS_VERSION)!g' \
 	    -re 's!@BINUTILS_URLBASE@!$(BINUTILS_URLBASE)!g' \
 	    -re 's!@BINUTILS_SOURCE@!$(BINUTILS_SOURCE)!g' \
@@ -97,11 +100,12 @@ all build-base: build-base-$(1)
 build-base-$(1): build-base-$(1).Dockerfile
 	$(DOCKER) build --squash -f $$< \
 	  --cache-from=$(PROTONSDK_URLBASE)/build-base-$(1) \
-	  -t $(PROTONSDK_URLBASE)/build-base-$(1):latest \
+	  -t $(PROTONSDK_URLBASE)/build-base-$(1):$(BUILDBASE_VERSION) \
 	  context
 pull::
-	-$(DOCKER) pull $(PROTONSDK_URLBASE)/build-base-$(1):latest
+	-$(DOCKER) pull $(PROTONSDK_URLBASE)/build-base-$(1):$(BUILDBASE_VERSION)
 push::
+	$(DOCKER) push $(PROTONSDK_URLBASE)/build-base-$(1):$(BUILDBASE_VERSION)
 	$(DOCKER) push $(PROTONSDK_URLBASE)/build-base-$(1):latest
 endef
 
@@ -114,13 +118,13 @@ all binutils: binutils-$(1)-$(2)
 binutils-$(1)-$(2): binutils-$(1)-$(2).Dockerfile | build-base
 	$(DOCKER) build -f $$< \
 	  --cache-from=$(PROTONSDK_URLBASE)/binutils-$(1)-$(2) \
-	  -t $(PROTONSDK_URLBASE)/binutils-$(1)-$(2):$(BINUTILS_VERSION) \
+	  -t $(PROTONSDK_URLBASE)/binutils-$(1)-$(2):$(BINUTILS_VERSION)_bb-$(BUILDBASE_VERSION) \
 	  -t $(PROTONSDK_URLBASE)/binutils-$(1)-$(2):latest \
 	  context
 pull::
-	-$(DOCKER) pull $(PROTONSDK_URLBASE)/binutils-$(1)-$(2):$(BINUTILS_VERSION)
+	-$(DOCKER) pull $(PROTONSDK_URLBASE)/binutils-$(1)-$(2):$(BINUTILS_VERSION)_bb-$(BUILDBASE_VERSION)
 push::
-	$(DOCKER) push $(PROTONSDK_URLBASE)/binutils-$(1)-$(2):$(BINUTILS_VERSION)
+	$(DOCKER) push $(PROTONSDK_URLBASE)/binutils-$(1)-$(2):$(BINUTILS_VERSION)_bb-$(BUILDBASE_VERSION)
 	$(DOCKER) push $(PROTONSDK_URLBASE)/binutils-$(1)-$(2):latest
 endef
 
@@ -141,13 +145,13 @@ mingw-$(2)-$(1): ARCH_FLAGS = $(MINGW_ARCH_FLAGS_$(2)-$(1))
 mingw-$(2)-$(1): mingw-$(2)-$(1).Dockerfile | binutils
 	$(DOCKER) build --squash -f $$< \
 	  --cache-from=$(PROTONSDK_URLBASE)/mingw-$(2)-$(1) \
-	  -t $(PROTONSDK_URLBASE)/mingw-$(2)-$(1):$(MINGW_VERSION) \
+	  -t $(PROTONSDK_URLBASE)/mingw-$(2)-$(1):$(MINGW_VERSION)_bb-$(BUILDBASE_VERSION) \
 	  -t $(PROTONSDK_URLBASE)/mingw-$(2)-$(1):latest \
 	  context
 pull::
-	-$(DOCKER) pull $(PROTONSDK_URLBASE)/mingw-$(2)-$(1):$(MINGW_VERSION)
+	-$(DOCKER) pull $(PROTONSDK_URLBASE)/mingw-$(2)-$(1):$(MINGW_VERSION)_bb-$(BUILDBASE_VERSION)
 push::
-	$(DOCKER) push $(PROTONSDK_URLBASE)/mingw-$(2)-$(1):$(MINGW_VERSION)
+	$(DOCKER) push $(PROTONSDK_URLBASE)/mingw-$(2)-$(1):$(MINGW_VERSION)_bb-$(BUILDBASE_VERSION)
 	$(DOCKER) push $(PROTONSDK_URLBASE)/mingw-$(2)-$(1):latest
 endef
 
@@ -176,13 +180,13 @@ gcc-$(1)-$(2): TARGET_FLAGS = $(GCC_TARGET_FLAGS_$(2))
 gcc-$(1)-$(2): gcc-$(1)-$(2).Dockerfile | mingw
 	$(DOCKER) build --squash -f $$< \
 	  --cache-from=$(PROTONSDK_URLBASE)/gcc-$(1)-$(2) \
-	  -t $(PROTONSDK_URLBASE)/gcc-$(1)-$(2):$(GCC_VERSION) \
+	  -t $(PROTONSDK_URLBASE)/gcc-$(1)-$(2):$(GCC_VERSION)_bb-$(BUILDBASE_VERSION) \
 	  -t $(PROTONSDK_URLBASE)/gcc-$(1)-$(2):latest \
 	  context
 pull::
-	-$(DOCKER) pull $(PROTONSDK_URLBASE)/gcc-$(1)-$(2):$(GCC_VERSION)
+	-$(DOCKER) pull $(PROTONSDK_URLBASE)/gcc-$(1)-$(2):$(GCC_VERSION)_bb-$(BUILDBASE_VERSION)
 push::
-	$(DOCKER) push $(PROTONSDK_URLBASE)/gcc-$(1)-$(2):$(GCC_VERSION)
+	$(DOCKER) push $(PROTONSDK_URLBASE)/gcc-$(1)-$(2):$(GCC_VERSION)_bb-$(BUILDBASE_VERSION)
 	$(DOCKER) push $(PROTONSDK_URLBASE)/gcc-$(1)-$(2):latest
 endef
 
