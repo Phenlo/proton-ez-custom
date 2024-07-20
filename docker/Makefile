@@ -97,7 +97,8 @@ DOCKER = docker
 PUSH_CACHE ?= no
 docker-cache-args = \
 	--cache-from=$(1) \
-	$(if $(filter yes,$(PUSH_CACHE)),--layers --cache-to=$(1),--squash)
+	$(if $(filter yes,$(PUSH_CACHE)),--cache-to=$(1)) \
+	$(if $(filter podman buildah,$(DOCKER)),--layers,--squash)
 
 define create-build-base-rules
 .PHONY: build-base-$(1)
