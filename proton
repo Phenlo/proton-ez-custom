@@ -40,7 +40,7 @@ from random import randrange
 #To enable debug logging, copy "user_settings.sample.py" to "user_settings.py"
 #and edit it if needed.
 
-CURRENT_PREFIX_VERSION="9.0-201"
+CURRENT_PREFIX_VERSION="9.0-202"
 
 PFX="Proton: "
 ld_path_var = "LD_LIBRARY_PATH"
@@ -805,6 +805,7 @@ class CompatData:
             use_dxvk_dxgi = not use_wined3d and \
                     not ("WINEDLLOVERRIDES" in g_session.env and "dxgi=b" in g_session.env["WINEDLLOVERRIDES"])
             use_nvapi = 'disablenvapi' not in g_session.compat_config or 'forcenvapi' in g_session.compat_config
+            use_dxvk_d3d8 = "dxvkd3d8" in g_session.compat_config
 
             builtin_dll_copy = os.environ.get("PROTON_DLL_COPY",
                     #dxsetup redist
@@ -855,6 +856,7 @@ class CompatData:
                 str(use_dxvk_dxgi),
                 builtin_dll_copy,
                 str(use_nvapi),
+                str(use_dxvk_d3d8),
             ))
 
             # check whether any prefix config has changed
@@ -939,6 +941,11 @@ class CompatData:
                 else:
                     wined3dfiles.append("dxgi")
 
+                if use_dxvk_d3d8:
+                    dxvkfiles.append("d3d8")
+                else:
+                    wined3dfiles.append("d3d8")
+
                 for f in wined3dfiles:
                     try_copy(g_proton.default_pfx_dir + "drive_c/windows/system32/" + f + ".dll", "drive_c/windows/system32",
                             prefix=self.prefix_dir, track_file=tracked_files, link_debug=True)
@@ -1022,11 +1029,6 @@ def default_compat_config():
                 #affected by CW bug 19741
                 "1017900", #Age of Empires: Definitive Edition
 
-                #affected by CW bug 23184
-                "2229490", #Iragon: Prologue
-                "1522260", #Iragon: Prologue 18+
-                "2229300", #Iragon
-                "1097480", #Iragon 18+
                 #CW bug 23986
                 "1928420",
                 ]:
@@ -1095,6 +1097,7 @@ def default_compat_config():
                 "460790", #Bayonetta
                 "273590", #Descent 3
                 "834530", #Yakuza Kiwami
+                "714010", #Aimlabs
                 ]:
             ret.add("gamedrive")
 
@@ -1134,6 +1137,7 @@ def default_compat_config():
                 "109600", #Neverwinter
                 "9900", #Star Trek Online
                 "9880", #Champions Online
+                "202750", #Alan Wake's American Nightmare
                 ]:
             ret.add("disablenvapi")
 
@@ -1354,6 +1358,7 @@ class Session:
 
         if not self.check_environment("PROTON_USE_WINED3D", "wined3d"):
             self.check_environment("PROTON_USE_WINED3D11", "wined3d")
+        self.check_environment("PROTON_DXVK_D3D8", "dxvkd3d8")
         self.check_environment("PROTON_NO_D3D11", "nod3d11")
         self.check_environment("PROTON_NO_D3D10", "nod3d10")
         self.check_environment("PROTON_NO_ESYNC", "noesync")
